@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pong Game</title>
+    <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; }
+        canvas { border: 1px solid black; }
+        #score { font-size: 24px; }
+    </style>
+</head>
+<body>
+    <h1 id="score">0 : 0</h1>
+    <canvas id="pong" width="800" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('pong');
+        const context = canvas.getContext('2d');
+
+        let playerScore = 0;
+        let computerScore = 0;
+
+        const paddleWidth = 10,
+              paddleHeight = 100,
+              ballSize = 10;
+
+        const player = { x: 0, y: canvas.height / 2 - paddleHeight / 2, width: paddleWidth, height: paddleHeight, color: 'blue', dy: 0 };
+        const computer = { x: canvas.width - paddleWidth, y: canvas.height / 2 - paddleHeight / 2, width: paddleWidth, height: paddleHeight, color: 'red', dy: 0 };
+        const ball = { x: canvas.width / 2, y: canvas.height / 2, radius: ballSize, speed: 5, dx: 5, dy: 5 };
+
+        function draw() {
+            // Clear canvas
+            context.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw paddles
+            context.fillStyle = player.color;
+            context.fillRect(player.x, player.y, player.width, player.height);
+            context.fillStyle = computer.color;
+            context.fillRect(computer.x, computer.y, computer.width, computer.height);
+
+            // Draw ball
+            context.beginPath();
+            context.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            context.fillStyle = 'black';
+            context.fill();
+            context.closePath();
+        }
+
+        function update() {
+            // Move paddles
+            player.y += player.dy;
+            computer.y += computer.dy;
+
+            // Prevent paddles from going out of bounds
+            player.y = Math.max(0, Math.min(canvas.height - player.height, player.y));
+            computer.y = Math.max(0, Math.min(canvas.height - computer.height, computer.y));
+
+            // Update ball position
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            // Ball collision with top and bottom
+            if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
+                ball.dy *= -1;
+            }
+
+            // Ball collision with paddles
+            if (ball.x - ball.radius < player.x + player.width && ball.y > player.y && ball.y < player.y + player.height) {
+                ball.dx *= -1;
+                playerScore++;
+            } else if (ball.x + ball.radius > computer.x && ball.y > computer.y && ball.y < computer.y + computer.height) {
+                ball.dx *= -1;
+                computerScore++;
+            }
+
+            // Update score display
+            document.getElementById('score').innerText = `${playerScore} : ${computerScore}`;
+
+            // Check for game over
+            if (ball.x < 0 || ball.x > canvas.width) {
+                ballReset();
+            }
+        }
+
+        function ballReset() {
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height / 2;
+            ball.dx = 5 * (Math.random() > 0.5 ? 1 : -1);
+            ball.dy = 5 * (Math.random() > 0.5 ? 1 : -1);
+        }
+
+        function gameLoop() {
+            draw();
+            update();
+            requestAnimationFrame(gameLoop);
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'ArrowUp') player.dy = -5;
+            if (event.key === 'ArrowDown') player.dy = 5;
+        });
+
+        document.addEventListener('keyup', () => {
+            player.dy = 0;
+        });
+
+        gameLoop();
+    </script>
+</body>
+</html>
